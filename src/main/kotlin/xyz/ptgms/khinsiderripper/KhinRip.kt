@@ -3,31 +3,32 @@ package xyz.ptgms.khinsiderripper
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
-import xyz.ptgms.khinsiderripper.progressBar.printProgress
-import java.io.File
-import kotlin.system.exitProcess
 import xyz.ptgms.khinsiderripper.downloadClass.batchDownloadLinkGetter
 import xyz.ptgms.khinsiderripper.downloadClass.downloadTrack
 import xyz.ptgms.khinsiderripper.downloadClass.getRedirectUrl
+import xyz.ptgms.khinsiderripper.progressBar.printProgress
+import java.io.File
+import java.io.FileOutputStream
+import kotlin.system.exitProcess
 
 
 object KhinRip {
     data class ReturnSearch(var textResults: ArrayList<String>, var linkResults: ArrayList<String>)
     data class ReturnTracks(var textResults: ArrayList<String>, var linkResults: ArrayList<String>, var available: String, var img: String)
-    private var linkArray = ArrayList<String>()
-    private var textArray = ArrayList<String>()
-    private var tracklisturl = ArrayList<String>()
-    private var tracklist = ArrayList<String>()
+
     private const val baseUrl = "https://downloads.khinsider.com/"
     private const val baseSearchUrl = "search?search="
     private const val baseSoundtrackAlbumUrl = "game-soundtracks/album/"
-    private var imgSrc = ""
-
-    private var flac = false
-    private var mp3 = false
-    private var ogg = false
 
     private fun getTrackList(albumName: String): ReturnTracks {
+        val imgSrc = ""
+        var flac = false
+        var mp3 = false
+        var ogg = false
+
+        var tracklisturl = ArrayList<String>()
+        var tracklist = ArrayList<String>()
+
         val tags: ArrayList<String> = ArrayList()
 
         val titlelength = ArrayList<String>()
@@ -83,6 +84,7 @@ object KhinRip {
         } catch (e: Exception) {
             println("An error occured while trying to retrieve this albums information! Does it even exist?\n" +
                     "Are you using the properly formatted album name from --search? Error: ${e.localizedMessage}")
+            exitProcess(-1)
         }
 
         var avtext = "Available Formats: "
@@ -100,8 +102,8 @@ object KhinRip {
 
 
     private fun getSearch(searchterm: String): ReturnSearch {
-        linkArray = ArrayList()
-        textArray = ArrayList()
+        var linkArray = ArrayList<String>()
+        var textArray = ArrayList<String>()
         val encodedSearch = java.net.URLEncoder.encode(searchterm, "utf-8")
         val url = baseUrl + baseSearchUrl + encodedSearch
         println("Read url: $url")
@@ -156,6 +158,11 @@ object KhinRip {
             println("An error occurred while trying to fetch download links. Maybe your specified type doesn't exist?")
             return
         }
+        var txtStore = downloadLinks.joinToString("\n")
+        val outputStream = FileOutputStream(albumName + ".txt")
+        val strToBytes: ByteArray = txtStore.toByteArray(Charsets.UTF_8)
+        outputStream.write(strToBytes)
+        outputStream.close()
         for (i in 0 until downloadLinks.size) {
             println(downloadLinks[i] + " | " + textArray[i])
         }
